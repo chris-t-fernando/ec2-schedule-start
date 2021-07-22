@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ec2-schedule-start
+
+Resources:
+  EC2ScheduleStart:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ec2_schedule_start/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Tags:
+        Project: "jripper"
+      Policies:
+        - Statement:
+            - Sid: EC2ScheduleStart
+              Effect: Allow
+              Action:
+                - ec2:StartInstances
+                - ec2:DescribeInstances
+              Resource: "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-8b5c50ee
+        SubnetIds:
+          - subnet-6577a03c
+          - subnet-a752c0c2
+          - subnet-325eee45
+      Events:
+        EC2ScheduleStart:
+          Type: Schedule
+          Properties:
+            Schedule: cron(30 19 ? * 1 *)
