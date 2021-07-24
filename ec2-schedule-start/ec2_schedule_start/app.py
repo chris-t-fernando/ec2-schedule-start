@@ -2,9 +2,9 @@ import json
 import boto3
 import logging, sys
 
-
 def lambda_handler(event, context):
     logging.basicConfig(stream=sys.stderr, level=logging.warning)
+
     logging.warning("Starting ec2-schedule-start lamba handler")
 
     ec2Client = boto3.client("ec2")
@@ -13,9 +13,9 @@ def lambda_handler(event, context):
     instDict = ec2Client.describe_instances()
     logging.warning("Ran describe instances")
     try:
-        logging.warning("Found {len} reservations".format(len=len(instDict)))
+        logging.warning(f"Found {len(instDict)} reservations")
         for r in instDict["Reservations"]:
-            logging.warning("Found {len} instances".format(len=len(r)))
+            logging.warning(f"Found {len(r)} instances")
             for i in r["Instances"]:
                 jripperConditionMet = False
                 poweronConditionMet = False
@@ -26,8 +26,7 @@ def lambda_handler(event, context):
                     ):
                         jripperConditionMet = True
                         logging.warning(
-                            "%s: Instance is part of JRipper project, met jripper condition",
-                            i["InstanceId"],
+                            f"{i['InstanceId']}: Instance is part of JRipper project, met jripper condition"
                         )
                     if (
                         str(t["Key"]).upper() == "AUTOPOWERON"
@@ -35,20 +34,17 @@ def lambda_handler(event, context):
                     ):
                         poweronConditionMet = True
                         logging.warning(
-                            "%s: Instance is tagged with AUTOPOWERON, met power on condition",
-                            i["InstanceId"],
+                            f"{i['InstanceId']}: Instance is tagged with AUTOPOWERON, met power on condition"
                         )
 
                 if jripperConditionMet and poweronConditionMet:
                     matchedInstances.append(i["InstanceId"])
                     logging.warning(
-                        "%s: Instance met both AUTOPOWERON and PROJECT conditions",
-                        i["InstanceId"],
+                        f"{i['InstanceId'],}: Instance met both AUTOPOWERON and PROJECT conditions"
                     )
                 else:
                     logging.warning(
-                        "%s: Instance did not meet AUTOPOWERON and/or PROJECT conditions, skipping",
-                        i["InstanceId"],
+                        f"{i['InstanceId']}: Instance did not meet AUTOPOWERON and/or PROJECT conditions, skipping"
                     )
 
     except Exception as e:
@@ -56,16 +52,15 @@ def lambda_handler(event, context):
             "Did not find Reservations or Instances key in Dictionary.  Terminating."
         )
         logging.error(str(e))
-        return False
+        raise
 
     logging.warning("Finished iterating ec2 instances, now beginning invoke")
     try:
         ec2Client.start_instances(InstanceIds=matchedInstances)
         logging.warning(
-            "Successfully issued power on command to systems: {hosts}".format(
-                hosts=str(matchedInstances)
-            )
+            f"Successfully issued power on command to systems: {str(matchedInstances)}"
         )
+        return {"statusCode": 200, "body": json.dumps("Success")}
     except Exception as e:
         logging.error("Failed to start instances.  Terminating.")
         logging.error(str(e))
