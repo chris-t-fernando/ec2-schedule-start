@@ -1,3 +1,8 @@
+# Deprecated and no longer maintained
+
+I folded this logic in to my EC2 idle project, so now there is a single project that handles scheduled EC2 power on as well as shutting down idle EC2 resources
+
+
 # ec2-schedule-start
 
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
